@@ -62,8 +62,7 @@ contract Bearchange is Owned {
   /// Tokens 
   ///////////////////////////////////
   
-  /// Token management functions
-  function withdrawToken(string _tokenSymbol, uint _amount) {
+  function withdrawToken(string _tokenSymbol, uint _amount) public {
     require(hasSymbol(_tokenSymbol));
     uint tokenIndex = getTokenIndex(_tokenSymbol);
     require(balancesInTokens[msg.sender][_tokenIndex] - _amount >= 0);
@@ -71,9 +70,26 @@ contract Bearchange is Owned {
   
     ERC20Interface token = ERC20Interface(tokens[tokenIndex].contract_address);
     require(token.transfer(msg.sender, amount) == true);
-    
   }
 
+  function depositToken(string _tokenSymbol, uint _amount) public {
+    require(hasSymbol(_tokenSymbol));
+    require(amount>0);
+
+    uint tokenIndex = getTokenIndex(_tokenSymbol);
+    uint tokenContractAddress = tokens[tokenIndex].contract_address;
+    
+    ERC20Interface token = ERC20Interface(tokenContractAddress);
+    require(token.transferFrom(msg.sender, address(this), amount) == true);
+    require(balancesInTokens[msg.sender][tokenIndex] + amount >= balancesInTokens[msg.sender][tokenIndex]);
+    balancesInTokens[msg.sender][tokenIndex] += amount;
+
+  }
+
+  function getBalanceToken(string _tokenSymbol) constant public returns (uint) {
+    uint tokenIndex = getTokenIndex(_tokenSymbol);
+    return balancesInTokens[msg.sender][tokenIndex];
+  }
 
   /// Add ERC20 Token
   function addToken(string _symbol, address _contract_address) onlyByOwner public returns (bool) {
